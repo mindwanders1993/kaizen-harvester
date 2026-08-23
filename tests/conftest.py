@@ -74,6 +74,20 @@ class MockLLMClient:
                 source_url="https://github.com/mock/repo",
             )
 
+        from core.agents.extractor import RawExtractionPayload
+
+        if response_model == RawExtractionPayload:
+            return RawExtractionPayload(
+                title="Mock Second Highest Salary",
+                problem_statement="Write a SQL query to get the second highest salary.",
+                setup_ddl="CREATE TABLE Employee (id INT, salary INT); INSERT INTO Employee VALUES (1, 100), (2, 200);",
+                solution_sql="SELECT MAX(salary) FROM Employee WHERE salary < (SELECT MAX(salary) FROM Employee);",
+                dialect="DuckDB",
+                difficulty="Medium",
+                category="Aggregations",
+                tags=["salary", "max"],
+            )
+
         raise ValueError(f"No mock handler configured for response model: {response_model}")
 
 
