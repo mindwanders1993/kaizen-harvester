@@ -1,0 +1,28 @@
+{
+  "total_count": 2,
+  "incomplete_results": false,
+  "items": [
+    {
+      "id": 101,
+      "name": "sql-portfolio",
+      "full_name": "faizanxmulla/sql-portfolio",
+      "html_url": "https://github.com/faizanxmulla/sql-portfolio",
+      "clone_url": "https://github.com/faizanxmulla/sql-portfolio.git",
+      "description": "Curated collection of SQL problems across LeetCode, DataLemur, and StrataScratch",
+      "stargazers_count": 285,
+      "language": "SQL",
+      "default_branch": "main"
+    },
+    {
+      "id": 102,
+      "name": "Beyond-LeetCode-SQL",
+      "full_name": "shawlu95/Beyond-LeetCode-SQL",
+      "html_url": "https://github.com/shawlu95/Beyond-LeetCode-SQL",
+      "clone_url": "https://github.com/shawlu95/Beyond-LeetCode-SQL.git",
+      "description": "Educational breakdown of SQL problems in Jupyter Notebooks",
+      "stargazers_count": 1250,
+      "language": "Jupyter Notebook",
+      "default_branch": "master"
+    }
+  ]
+}
