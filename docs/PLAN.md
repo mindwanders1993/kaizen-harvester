@@ -492,5 +492,5 @@ No additional runtime dependencies are needed. The plan uses only:
 | **2** | `core/memory/duckdb_store.py`, `core/memory/lancedb_store.py` | `pytest tests/test_memory.py -v` | ✅ Completed |
 | **3** | `core/agents/scout.py`, `extractor.py`, `curator.py`, `prompts/` | `pytest tests/test_agents.py -v` | ✅ Completed |
 | **4** | `core/ingress/rate_limiter.py`, `github.py`, `web.py` | `pytest tests/test_ingress.py -v` | ✅ Completed |
-| **5** | `cli.py` (full pipeline wired) | `python cli.py run --recipe ... --limit 3` | ⬜ Pending |
+| **5** | `cli.py` (full pipeline wired) | `python cli.py run --recipe ... --limit 3` | ✅ Completed |
 | **6** | End-to-end integration with real GitHub repo | `pytest -v && python cli.py stats` | ⬜ Pending |
