@@ -6,3 +6,8 @@ rich
 openai
 anthropic
 sentence-transformers
+pydantic
+pytest
+pytest-asyncio
+pytest-mock
+ruff

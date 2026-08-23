@@ -216,6 +216,7 @@ def get_llm_client():
         return anthropic.Anthropic()
     return openai.OpenAI()
 
+
 def llm_structured_call(client, system: str, user: str, response_model: type[BaseModel]) -> BaseModel:
     """Wraps provider-specific structured output calls into a unified interface."""
 ```

@@ -12,6 +12,7 @@ All cross-boundary data transfer is strictly typed using Pydantic models to ensu
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 
+
 class HarvestRecipe(BaseModel):
     name: str
     domain: str
@@ -19,12 +20,14 @@ class HarvestRecipe(BaseModel):
     filters: Dict[str, Any]
     target_schema: Dict[str, str]
 
+
 class RawArtifact(BaseModel):
     file_id: str
     source_url: str
     file_path: str
     content: str
-    format: str # 'markdown', 'sql', 'jupyter'
+    format: str  # 'markdown', 'sql', 'jupyter'
+
 
 class ScoutResult(BaseModel):
     is_candidate: bool
@@ -32,11 +35,13 @@ class ScoutResult(BaseModel):
     reason: str
     primary_format: str
 
+
 class ExtractedRecord(BaseModel):
     # Dynamic fields generated based on recipe's target_schema
     # e.g., title, problem_statement, setup_ddl, solution_sql
     data: Dict[str, Any]
     source_url: str
+
 
 class CuratedRecord(BaseModel):
     record_id: str
@@ -57,6 +62,7 @@ All fetchers implement a standard interface for discovering and downloading arti
 
 ```python
 from typing import AsyncGenerator
+
 
 class BaseFetcher:
     async def fetch(self, query: str, filters: dict) -> AsyncGenerator[RawArtifact, None]:
@@ -107,16 +113,17 @@ The agent swarm is implemented using the official OpenAI/Anthropic SDKs with str
 ```python
 import duckdb
 
+
 def verify_sql(setup_ddl: str, solution_sql: str) -> bool:
-    con = duckdb.connect(database=':memory:') # Ephemeral, zero side-effects
+    con = duckdb.connect(database=":memory:")  # Ephemeral, zero side-effects
     try:
         # 1. Execute Schema & Mock Data
         con.execute(setup_ddl)
-        
+
         # 2. Execute Solution Query
         # Wrap in a LIMIT to prevent memory exhaustion on Cartesian joins
         con.execute(f"SELECT * FROM ({solution_sql}) LIMIT 10")
-        
+
         return True
     except Exception as e:
         raise SandBoxExecutionError(str(e))
@@ -133,11 +140,13 @@ def verify_sql(setup_ddl: str, solution_sql: str) -> bool:
 import pyarrow as pa
 
 # LanceDB Schema
-vector_schema = pa.schema([
-    pa.field("id", pa.string()),
-    pa.field("vector", pa.list_(pa.float32(), 384)), # MiniLM-L6-v2 dimensionality
-    pa.field("source_url", pa.string())
-])
+vector_schema = pa.schema(
+    [
+        pa.field("id", pa.string()),
+        pa.field("vector", pa.list_(pa.float32(), 384)),  # MiniLM-L6-v2 dimensionality
+        pa.field("source_url", pa.string()),
+    ]
+)
 ```
 - **Similarity Threshold**: `distance < 0.15` (Cosine).
 
