@@ -43,6 +43,8 @@ storage/vault.duckdb*
 storage/lancedb/
 storage/raw_buffer/
 storage/exports/
+storage/*.jsonl
+storage/*.parquet
 
 # IDE
 .vscode/

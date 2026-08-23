@@ -142,6 +142,7 @@ async def run_pipeline(
     concurrency: int = 10,
     db_path: str = "storage/vault.duckdb",
     vector_path: str = "storage/lancedb",
+    mock_llm: bool = False,
     scout_agent: Optional[ScoutAgent] = None,
     extractor_agent: Optional[ExtractorAgent] = None,
     curator_agent: Optional[CuratorAgent] = None,
@@ -155,8 +156,41 @@ async def run_pipeline(
     duckdb_store = duckdb_store or DuckDBStore(db_path=db_path)
     lancedb_store = lancedb_store or LanceDBStore(db_path=vector_path)
 
-    extractor = extractor_agent or ExtractorAgent()
-    scout = scout_agent or ScoutAgent()
+    if mock_llm and not (scout_agent and extractor_agent):
+        from core.agents.base import LLMClientWrapper
+        from core.agents.extractor import RawExtractionPayload
+        from core.schemas import ScoutResult
+
+        class _CliMockLLM:
+            def structured_call(self, system_prompt: str, user_prompt: str, response_model, override_data=None):
+                if response_model == ScoutResult:
+                    return ScoutResult(
+                        reasoning="Mock chain-of-thought analysis: Content has SQL problem headers and DDL.",
+                        is_candidate=True,
+                        confidence=0.95,
+                        primary_format="sql",
+                        reason="Valid SQL problem found",
+                    )
+                if response_model == RawExtractionPayload:
+                    return RawExtractionPayload(
+                        title="Second Highest Salary",
+                        problem_statement="Write a SQL query to get the second highest salary from the Employee table.",
+                        setup_ddl="CREATE TABLE Employee (id INT, salary INT); INSERT INTO Employee VALUES (1, 100), (2, 200), (3, 300);",
+                        solution_sql="SELECT MAX(salary) AS SecondHighestSalary FROM Employee WHERE salary < (SELECT MAX(salary) FROM Employee);",
+                        dialect="DuckDB",
+                        difficulty="Medium",
+                        category="Aggregations",
+                        tags=["salary", "max"],
+                    )
+                return response_model()
+
+        llm_wrapper = LLMClientWrapper(mock_client=_CliMockLLM())
+        extractor = extractor_agent or ExtractorAgent(llm_client=llm_wrapper)
+        scout = scout_agent or ScoutAgent(llm_client=llm_wrapper)
+    else:
+        extractor = extractor_agent or ExtractorAgent()
+        scout = scout_agent or ScoutAgent()
+
     curator = curator_agent or CuratorAgent(extractor=extractor)
 
     github_fetcher = GithubFetcher()
@@ -292,6 +326,9 @@ def main():
     parser.add_argument("--vector-path", type=str, default="storage/lancedb", help="Path to LanceDB vector directory")
     parser.add_argument("--export-jsonl", type=str, help="Export vault challenges to JSONL file path")
     parser.add_argument("--export-parquet", type=str, help="Export vault challenges to Apache Parquet file path")
+    parser.add_argument(
+        "--mock-llm", action="store_true", help="Run with deterministic mock LLM for offline testing without API keys"
+    )
 
     args = parser.parse_args()
 
@@ -310,6 +347,7 @@ def main():
                 concurrency=args.concurrency,
                 db_path=args.db_path,
                 vector_path=args.vector_path,
+                mock_llm=args.mock_llm,
             )
         )
 
