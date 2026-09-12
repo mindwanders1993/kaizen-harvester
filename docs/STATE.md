@@ -20,6 +20,11 @@ nothing else. **No real LLM call has ever been made in this repo.**
 - `uv` workspace adopted now, `projects/p1-map` as the only member — moving an empty tree is free,
   moving a working pipeline later is not — `pyproject.toml`
 - `packages/`, `p2-ingest`, `p3-generate` deliberately **not** scaffolded — principle 7 — `docs/CONCEPT_NOTES.md`
+- Stage 0 is a throwaway script calling the `openai` SDK against OpenRouter's or Ollama's
+  `base_url` — no provider abstraction, no base class. A provider layer is stage-3 machinery
+  and there is not yet one working call to abstract over — `CLAUDE.md`
+- Stage 0 is provider-agnostic: either OpenRouter or Ollama clears it, so pick whichever
+  verifies fastest today. This does **not** settle open decision 2 — `docs/P1_ARCHITECTURE.md` §11.2
 
 ## Open right now
 
