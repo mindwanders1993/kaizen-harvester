@@ -29,6 +29,7 @@ If you find a reference to `core/`, `cli.py`, `recipes/` or `storage/` anywhere,
 | `docs/STATE.md` | Where the build actually is today — read before planning |
 | `docs/CONCEPT_NOTES.md` | The three-project programme and how they separate |
 | `docs/CLAUDE_WORKFLOW.md` | How this is built across Claude surfaces |
+| `docs/PROMPTS.md` | Prompt library for claude.ai design sessions |
 | `docs/P1_CONCEPT_NOTES.md` | Earlier P1 spec — superseded where it conflicts with `P1_ARCHITECTURE.md` |
 | `.agents/AGENTS.md` | Workflow and git model (shared with the Antigravity CLI) |
 
