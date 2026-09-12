@@ -162,60 +162,27 @@ Two surfaces; picking wrong wastes the session.
 - **Touching the repo** → **Claude Code on the web** (claude.ai/code). Runs against the repo in the
   cloud, so "read the failing test and tell me what's wrong" actually works.
 
-Close every mobile Project session with prompt **G** below, then paste at the desk. Otherwise the
-session evaporates.
+Close every mobile Project session with prompt **C1** ([`PROMPTS.md`](PROMPTS.md) §5), then paste at
+the desk. Otherwise the session evaporates.
 
 ---
 
 ## 7. Prompt library
 
-**A. Resolve an open decision**
-```
-Open decision §11.2: which model tier runs bulk verification — local Ollama
-qwen2.5-coder:7b, or OpenRouter hosted. Recommendation first. Then: what evidence
-would change it, and what's the cheapest experiment that produces that evidence?
-```
+Lives in **[`PROMPTS.md`](PROMPTS.md)** — 23 reusable prompts across four modes:
 
-**B. Adversarial pass** — recreates a two-model debate solo
-```
-You wrote the above. Now attack it. You're a skeptical reviewer who thinks this is
-over-engineered for a 100-repo MVP. Three strongest objections, ranked. Then say
-which you actually concede.
-```
+| Mode | Use when | Prompts |
+|---|---|---|
+| **Brainstorming** | You don't know the shape of the answer yet | `B1`–`B5` |
+| **Designing** | You know the options and need to commit | `D1`–`D6` |
+| **Reviewing** | Something already exists and needs attacking | `R1`–`R6` |
+| **Simulating** | You want evidence before anything is built | `S1`–`S7` |
+| **Closing** | Something was decided and must reach the repo | `C1`–`C2` |
 
-**C. Pre-mortem** — the pattern that would have caught v1
-```
-It's three months out and this is abandoned. Write the postmortem. Rank causes by
-probability, not severity. For the top one: what cheap tripwire this week catches it?
-```
+That file also lists the anti-patterns — the asks that belong in Claude Code, not here.
 
-**D. Rubric authoring** — `intent.md` Q3, blocking Stage 1, pure judgement
-```
-My Verifier must decide "is this genuine practice material?" I need a rubric precise
-enough that two people grading the same repo agree. Edge cases: a curated awesome-list
-of SQL links; 200 questions with no answers; a course syllabus; one 5,000-line README
-of Q&A. Give the rubric, then the three repos most likely to be graded wrongly by it.
-```
-
-**E. Reject sampling** — pitfall 2, ideal for mobile
-```
-Ten repos my verifier rejected, with reasoning: <paste>
-Which rejects are wrong? Is there a systematic bias, or ten independent calls?
-```
-
-**F. Contract design** — when P2 starts; the separation rule is where monorepos die
-```
-P1 hands P2 a file, never a join. Design the export contract. What must be in it so
-P2 never needs to ask P1 a follow-up question? What's the cost of getting it wrong?
-```
-
-**G. Handoff** — end every session that decided something
-```
-Write the delta for docs/STATE.md and, if this changes the architecture, the exact
-replacement text for the affected section. Markdown only, no commentary.
-```
-
----
+Kept in one place deliberately: a second copy of these would drift from the first, which is the same
+failure mode as two versions of a doc in Project knowledge.
 
 ## 8. Phasing across P1 / P2 / P3
 

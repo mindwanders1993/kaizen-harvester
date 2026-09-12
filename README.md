@@ -56,6 +56,7 @@ make that failure impossible to repeat.
 | [`docs/CONCEPT_NOTES.md`](docs/CONCEPT_NOTES.md) | The three-project programme and how they separate |
 | [`docs/STATE.md`](docs/STATE.md) | Where the build actually is today |
 | [`docs/CLAUDE_WORKFLOW.md`](docs/CLAUDE_WORKFLOW.md) | How this is built across Claude surfaces |
+| [`docs/PROMPTS.md`](docs/PROMPTS.md) | Prompt library for design sessions — brainstorm, design, review, simulate |
 | [`docs/sdlc/`](docs/sdlc/) | Per-work-item intent and plan |
 | [`.agents/AGENTS.md`](.agents/AGENTS.md) | Workflow and git model |
 
