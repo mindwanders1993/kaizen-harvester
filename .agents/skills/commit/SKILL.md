@@ -25,7 +25,7 @@ When activated, execute these steps:
 
 5. **Pre-Commit Hook Failure Protocol**:
    If `git commit` is rejected by pre-commit hooks (Ruff / Black), do NOT re-run blindly:
-   - Run auto-remediation: `source venv/bin/activate && ruff check --fix . && ruff format .`
+   - Run auto-remediation: `uv run ruff check --fix . && ruff format .`
    - Show the user what was auto-fixed via `git diff`.
    - Re-stage and commit.
 

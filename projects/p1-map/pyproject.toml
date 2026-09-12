@@ -1,0 +1,27 @@
+[project]
+name = "p1-map"
+version = "0.1.0"
+description = "P1 — GitHub Knowledge Map: which repos are worth harvesting for topic X"
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.27",
+    "openai>=1.40",      # OpenAI-compatible client, base_url swapped per provider
+    "pydantic>=2.8",
+    "tenacity>=9.0",
+    "typer>=0.12",
+    "rich>=13.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/p1_map"]

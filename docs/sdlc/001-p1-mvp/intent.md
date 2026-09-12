@@ -35,7 +35,7 @@ judgements I can argue with.
 |---|---|
 | **User** | Me, solo. No team, no other consumers yet |
 | **Systems touched** | GitHub Search + Core REST APIs · an LLM provider · local SQLite · local disk for evidence bundles |
-| **Not touched** | `core/` v1 (frozen, reference only) · P2 · P3 · any cloud infrastructure |
+| **Not touched** | P2 · P3 · any cloud infrastructure. (v1 `core/` was deleted on 2026-09-12; recoverable at tag `v1-archive`) |
 | **Downstream** | P2 will eventually consume this map — but no contract is owed until P2 exists |
 
 ## Constraints

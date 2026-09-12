@@ -4,50 +4,54 @@ Three independent sub-projects in one repo. **Only Project 1 is in scope right n
 
 | | Project | Status |
 |---|---|---|
-| **P1** | GitHub Knowledge Map — find & score repos worth harvesting | **active** |
+| **P1** | GitHub Knowledge Map — find & score repos worth harvesting | **active — Stage 0** |
 | **P2** | Ingestion → Knowledge Archive | not started |
 | **P3** | Domain Generator Agents (SQL/Python/Scala/Spark) | not started |
 
-## Current state — read before editing anything
+## Current state
 
-`core/`, `cli.py`, `recipes/` and `storage/` are **v1 legacy**. P1 is a **fresh rebuild**, not an
-extension of them. Do not refactor `core/` to fit the new design, and do not assume its patterns are
-current. Treat it as reference only.
+P1 lives in `projects/p1-map/`. Nothing exists there yet beyond the package skeleton — **Stage 0 has
+not been done.**
 
-Why v1 failed: it authenticates only against `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
-(`core/agents/base.py`), neither of which exists here. Every "successful" run used a mock LLM, so
-`storage/vault.duckdb` holds one fabricated record. **Stage 0 of the new build exists specifically to
-make that impossible to repeat: prove a real model call works before building anything on top of it.**
+The v1 multi-agent harvester (`core/`, `cli.py`, `recipes/`, `storage/`) was **deleted, not
+extended**, and is recoverable at the `v1-archive` tag. It authenticated only against
+`OPENAI_API_KEY` / `ANTHROPIC_API_KEY`, neither of which exists here, so every "successful" run used
+a mock LLM and the database held one fabricated record. **Stage 0 exists specifically to make that
+impossible to repeat: prove a real model call works before building anything on top of it.**
+
+If you find a reference to `core/`, `cli.py`, `recipes/` or `storage/` anywhere, it is stale — fix it.
 
 ## Documentation map
 
 | Doc | Authoritative for |
 |---|---|
 | `docs/P1_ARCHITECTURE.md` | **P1 architecture of record.** Start here |
+| `docs/STATE.md` | Where the build actually is today — read before planning |
 | `docs/CONCEPT_NOTES.md` | The three-project programme and how they separate |
+| `docs/CLAUDE_WORKFLOW.md` | How this is built across Claude surfaces |
 | `docs/P1_CONCEPT_NOTES.md` | Earlier P1 spec — superseded where it conflicts with `P1_ARCHITECTURE.md` |
 | `.agents/AGENTS.md` | Workflow and git model (shared with the Antigravity CLI) |
-| `docs/HLD.md`, `docs/LLD.md`, `docs/agent_swarm.md` | v1 design — historical |
 
 When `P1_CONCEPT_NOTES.md` and `P1_ARCHITECTURE.md` disagree, the architecture doc wins.
 
+**Workflow skills live in `.agents/skills/`** (`plan`, `build`, `commit`, `pr`, `test`, `dev_env`) and
+are shared with the Antigravity CLI. That is the single source — do not create a parallel set under
+`.claude/skills/`.
+
 ## Environment
 
-- Python **3.13** in `./venv` (note: `pyproject.toml` still targets `py310`)
-- `./venv/bin/pytest` · `./venv/bin/ruff` — do not assume they're on `PATH`
+Python **3.13**, [`uv`](https://docs.astral.sh/uv/) workspace. Members live under `projects/*`.
 
 ```bash
-./venv/bin/pytest                  # tests (asyncio_mode = auto)
-./venv/bin/ruff check .            # lint  (line-length 120, rules E/F/I)
-./venv/bin/ruff format .           # format
+uv sync                  # install workspace + dev groups
+uv run pytest            # tests (asyncio_mode = auto)
+uv run ruff check .      # lint  (line-length 120, rules E/F/I)
+uv run ruff format .     # format
 ```
 
 ## LLM providers — verify before designing around one
 
-**No `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` exists.** `requirements.txt` lists `openai` and
-`anthropic`; that is misleading legacy.
-
-Currently available in this shell:
+**No `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` exists.**
 
 | Provider | Env var | Status |
 |---|---|---|
@@ -68,7 +72,7 @@ Full model in `.agents/AGENTS.md`. The non-negotiables:
 
 - Branch from `dev`, never `main`. Name `feat/<description>`. PRs target `dev` (`--base dev`).
 - **HARD RULE: never merge `dev` → `main` from the CLI.** That release merge is done by the user in
-  the GitHub web UI only.
+  the GitHub web UI only. Enforced by a `PreToolUse` hook in `.claude/settings.json`.
 - Never reuse a merged branch — start fresh from `dev`.
 - Conventional Commits (`feat(scope): …`).
 

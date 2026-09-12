@@ -1,136 +1,87 @@
-# 🌾 Kaizen Harvester (Sovereign Knowledge Harvester)
+# Kaizen Harvester
 
-> **Autonomous multi-agent knowledge harvesting, extraction, deduplication, and distillation engine.**
+A GitHub universal scraper, built as **three independent sub-projects**: find the material, ingest it,
+then generate from it.
 
-`kaizen-harvester` is a sovereign data ingestion and knowledge distillation pipeline. It automates the discovery, extraction, verification, and vector-backed deduplication of technical practice challenges, educational datasets, architectural patterns, and domain knowledge from open sources (GitHub repositories, technical archives, and web endpoints).
+| | Project | Consumes | Produces | Status |
+|---|---|---|---|---|
+| **P1** | GitHub Knowledge Map | GitHub API | scored, human-curated repo map | **active — Stage 0** |
+| **P2** | Ingestion → Knowledge Archive | repo selections from P1 | the knowledge archive | not started |
+| **P3** | Domain Generator Agents | the archive | questions, datasets, artifacts | not started |
 
----
+They are separate because they have different bottlenecks. P1 is metadata-bound and almost free of LLM
+cost; P2 is clone-, disk- and LLM-bound; P3 is retrieval- and sandbox-bound. Fused into one pipeline,
+the whole thing would move at the speed of the slowest stage.
 
-## ⚡ Key Highlights
-
-- **🎯 Declarative Harvesting Recipes (`recipes/*.yaml`)**: Define harvest domains, source queries, filters, and target extraction schemas with pure YAML.
-- **🤖 Specialized Multi-Agent Swarm (`core/agents/`)**:
-  - **Scout Agent**: Discovers candidate repositories, filters relevant files, and discards noise.
-  - **Extractor Agent**: Converts heterogeneous text (Markdown, Jupyter notebooks, raw SQL scripts) into structured schema records via LLM intelligence.
-  - **Curator Agent**: Enforces schema conformance, executes query sandboxing in DuckDB, verifies syntax, and assigns difficulty ratings.
-- **🧠 Dual-Memory Engine (`core/memory/` & `storage/`)**:
-  - **LanceDB**: Vector database storing dense text embeddings for real-time semantic deduplication and similarity clustering.
-  - **DuckDB**: Fast in-process columnar analytical engine for structured catalog storage, validation, and analytics.
-- **🖥️ Rich Terminal UI (`cli.py`)**: Real-time console visualization of harvest plans, progress tables, and vault statistics.
+**The separation rule:** each project owns its own schema, and no project ever SELECTs from another's
+tables. P1 hands P2 a file, never a view or a join.
 
 ---
 
-## 🏗️ System Architecture Overview
+## P1 — what it does
 
-```mermaid
-flowchart TD
-    subgraph Ingress ["1. Ingress Mesh (core/ingress)"]
-        R[YAML Recipe] --> G[GitHub Search & API Fetcher]
-        R --> W[Web & Obscura Mesh]
-        G & W --> RF[Raw File Triage]
-    end
+> Answers **"which GitHub repos are worth harvesting for topic X?"** — and lets a human correct the
+> answer — **before a single repository is cloned.**
 
-    subgraph Swarm ["2. Agent Swarm (core/agents)"]
-        RF --> Scout[Scout Agent: Source & Relevance Filter]
-        Scout --> Extractor[Extractor Agent: Schema Transformation]
-        Extractor --> Curator[Curator Agent: Syntax & DuckDB Verification]
-    end
+It is a librarian building a card catalogue, not a truck moving books. P2 is the truck.
 
-    subgraph Storage ["3. Memory & Vault (core/memory & storage)"]
-        Curator --> Lance[LanceDB: Vector Embeddings & Deduplication]
-        Lance --> Duck[DuckDB: Structured Knowledge Vault]
-        Duck --> Out[JSONL / Parquet / Downstream Platforms]
-    end
-```
-
----
-
-## 📁 Repository Structure
+P1 reads two small files per repo: the file tree and the README. Both are saved to disk keyed by
+`commit_sha`, so scoring and re-verification are pure functions over saved evidence and cost nothing
+to replay.
 
 ```
-kaizen-harvester/
-├── cli.py                     # Main CLI entrypoint (run, stats)
-├── requirements.txt           # Python dependencies
-├── .agents/                   # Kaizen Governor agentic skills & workflows
-│   ├── AGENTS.md              # Master Kaizen Governor & branching guidelines
-│   └── skills/                # plan, build, commit, pr, test, dev_env, etc.
-├── core/
-│   ├── __init__.py
-│   ├── agents/                # Swarm agents (Scout, Extractor, Curator)
-│   │   └── __init__.py
-│   ├── ingress/               # Source collectors (GitHub, Web, Obscura)
-│   │   └── __init__.py
-│   └── memory/                # Storage layer (LanceDB vector + DuckDB relational)
-│       └── __init__.py
-├── recipes/                   # Declarative YAML harvesting recipes
-│   └── sql_challenges.yaml    # SQL challenge extraction recipe
-├── storage/                   # Local database & vector store artifacts
-└── docs/                      # Comprehensive technical documentation
-    ├── HLD.md                 # High-Level Design (System architecture & data flow)
-    ├── LLD.md                 # Low-Level Design (Classes, schemas, & APIs)
-    ├── recipes_guide.md       # Guide to creating and customizing YAML recipes
-    ├── agent_swarm.md         # Multi-agent roles, prompts, and verification
-    ├── storage_and_memory.md  # LanceDB deduplication & DuckDB vault design
-    └── cli_reference.md       # CLI options, arguments, and environment setup
+topics.yaml → Query Planner → Discovery → Enricher → Gate (S_meta)
+                                                       ↓ survivors
+                                            Inspector (tree + README → disk)
+                                                       ↓
+                                    Structure (deterministic) + Verifier (LLM)
+                                                       ↓
+                                            Store → Datasette curation → Export to P2
 ```
 
----
+## Status
 
-## 🚀 Quickstart
+Stage 0: prove a real model call works before building anything on top of it. Nothing else exists yet.
 
-### 1. Prerequisites & Virtual Environment
+The previous version of this tool (`v1`, tagged `v1-archive`) shipped a database containing **one
+fabricated record** — it was built top-down, never wired to a working API key, and a mock LLM returned
+plausible output the whole way. It was removed rather than extended. Stage 0 exists specifically to
+make that failure impossible to repeat.
 
-Ensure Python 3.10+ is installed:
+## Documentation
+
+| Doc | Authoritative for |
+|---|---|
+| [`docs/P1_ARCHITECTURE.md`](docs/P1_ARCHITECTURE.md) | **P1 architecture of record.** Start here |
+| [`docs/CONCEPT_NOTES.md`](docs/CONCEPT_NOTES.md) | The three-project programme and how they separate |
+| [`docs/STATE.md`](docs/STATE.md) | Where the build actually is today |
+| [`docs/CLAUDE_WORKFLOW.md`](docs/CLAUDE_WORKFLOW.md) | How this is built across Claude surfaces |
+| [`docs/sdlc/`](docs/sdlc/) | Per-work-item intent and plan |
+| [`.agents/AGENTS.md`](.agents/AGENTS.md) | Workflow and git model |
+
+## Development
+
+Python 3.13, [`uv`](https://docs.astral.sh/uv/) workspace.
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+uv sync                      # install workspace + dev dependencies
+uv run pytest                # tests
+uv run ruff check .          # lint  (line-length 120, rules E/F/I)
+uv run ruff format .         # format
 ```
 
-### 2. Configure Environment Variables
+### Environment
 
-Create a `.env` file or export your API credentials:
+| Provider | Env var | Status |
+|---|---|---|
+| OpenRouter | `OPENROUTER_API_KEY` | set |
+| Ollama (local) | none needed | running |
+| Gemini | `GOOGLE_API_KEY` | unset |
+| GitHub | `GITHUB_TOKEN` | set |
 
-```bash
-export OPENAI_API_KEY="your-openai-key"        # Or ANTHROPIC_API_KEY
-export GITHUB_TOKEN="your-github-token"        # For GitHub API ingress
-```
+All providers are OpenAI-compatible — one adapter with a swapped `base_url`, not four clients.
 
-### 3. Inspect Vault Statistics
+## Licence
 
-Check the current counts in the LanceDB vector store and DuckDB records:
-
-```bash
-python cli.py stats
-```
-
-### 4. Execute a Recipe (Dry Run / Full Harvest)
-
-Run the SQL challenge harvesting pipeline using a recipe:
-
-```bash
-python cli.py run --recipe recipes/sql_challenges.yaml
-```
-
----
-
-## 📖 Documentation Index
-
-For complete architectural specifications, module breakdowns, and customization guides, consult the [docs/](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/) folder:
-
-| Document | Description |
-|:---|:---|
-| [**High-Level Design (HLD)**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/HLD.md) | System architecture, component boundaries, data pipeline stages, and flow diagrams. |
-| [**Low-Level Design (LLD)**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/LLD.md) | Class models, component schemas, agent prompt structures, and database definitions. |
-| [**Master Implementation Plan**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/PLAN.md) | 6-phase module-wise build plan with Karpathy, Loop, REACT & Harness engineering principles. |
-| [**Recipes Guide**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/recipes_guide.md) | Specification for writing declarative YAML recipes, schemas, and target sources. |
-| [**Agent Swarm**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/agent_swarm.md) | Detailed specifications for the Scout, Extractor, and Curator multi-agent system. |
-| [**Storage & Memory Layer**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/storage_and_memory.md) | LanceDB vector deduplication mechanics and DuckDB relational vault schemas. |
-| [**CLI Reference**](file:///Users/mrrobot/Desktop/Projects/kaizen-harvester/docs/cli_reference.md) | Full command-line interface documentation, flags, and runtime configurations. |
-
----
-
-## 🛡️ License
-
-Internal Sovereign Engineering Project. All rights reserved.
+Unlicensed / all rights reserved. Note that "publicly available" is not "freely usable": P1 carries
+each repo's SPDX licence so P3 can filter on redistributability.

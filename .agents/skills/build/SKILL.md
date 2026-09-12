@@ -12,19 +12,19 @@ When activated, execute these steps iteratively until successful:
 2. **Test (Quality Gate)**: Run the following verification commands from the project root (`/Users/mrrobot/Desktop/Projects/kaizen-harvester`):
 
    ```bash
-   # 1. Activate venv
-   source venv/bin/activate
+   # 1. Sync the uv workspace
+   uv sync
 
    # 2. Code formatting & linting
-   ruff check --fix . && ruff format .
+   uv run ruff check --fix . && uv run ruff format .
 
    # 3. Unit test suite
-   pytest
-
-   # 4. Dry-run CLI check
-   python cli.py stats
-   python cli.py run --recipe recipes/sql_challenges.yaml
+   uv run pytest
    ```
+
+   **A passing suite is not evidence the system works.** v1 passed its whole suite while every
+   LLM call went to a mock. If the change touches a provider, the GitHub API, or the Verifier,
+   the quality gate also requires one **real** call whose output you paste into the summary.
 
 3. **Reflect**:
    - If tests **FAIL**: Do not guess blindly. Read the logs/tracebacks, form a hypothesis, fix the code surgically, and return to Step 2.

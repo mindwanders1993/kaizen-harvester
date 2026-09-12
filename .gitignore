@@ -5,25 +5,13 @@ __pycache__/
 *.so
 .Python
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 
 # Virtual Environments
-venv/
 .venv/
+venv/
 env/
 ENV/
 
@@ -38,11 +26,10 @@ htmlcov/
 .env.local
 .env.*.local
 
-# Databases & Local Storage
-storage/vault.duckdb*
-storage/lancedb/
-storage/raw_buffer/
-storage/exports/
+# P1 — local database and fetched evidence.
+# Evidence bundles are keyed by commit_sha and re-fetchable; the DB is rebuildable.
+projects/p1-map/harvest.db*
+projects/p1-map/evidence/
 
 # IDE
 .vscode/
