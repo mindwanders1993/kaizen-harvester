@@ -160,11 +160,11 @@ P1's map. Output: the archive that P3 draws on.
 
 ### The central design fact: content-type routing
 
-This is what makes the scraper *universal*, and the existing code structurally cannot do it.
-`RawArtifact.content: str` (`core/schemas.py:45`) plus `file_path.read_text()`
-(`core/ingress/github.py:135`) assume every artifact is UTF-8 text small enough to fit in a prompt.
-Cricket, football and COVID repos are parquet and multi-gigabyte CSV. Routing must exist before the
-first `RawArtifact` is written, because retrofitting it reworks every schema downstream.
+This is what makes the scraper *universal*, and it is where v1 was structurally stuck: a
+`content: str` artifact field plus `read_text()` assume every artifact is UTF-8 text small enough to
+fit in a prompt. Cricket, football and COVID repos are parquet and multi-gigabyte CSV. Routing must
+exist before the first artifact record is written, because retrofitting it reworks every schema
+downstream.
 
 | Content type | Handling | Reaches an LLM? |
 |---|---|---|
@@ -188,9 +188,30 @@ first `RawArtifact` is written, because retrofitting it reworks every schema dow
 
 ### The fan-out requirement
 
-The current extractor returns a single record per file (`core/agents/extractor.py:101`). Target
-sources are READMEs holding hundreds of questions each, so today each yields exactly one item. This
-is the single biggest ceiling on the archive and must be fixed as a splitter stage, not a tweak.
+v1's extractor returned a single record per file. Target sources are READMEs holding hundreds of
+questions each, so each yielded exactly one item. This is the single biggest ceiling on the archive
+and must be fixed as a splitter stage, not a tweak.
+
+**Proposed shape — a two-pass extractor, where the second pass _is_ the fan-out**
+_(design note, 2026-09-12. Not active: P2 waits for P1 Stage 2 and ~100 read verdicts.)_
+
+1. **Segment — deterministic.** Split on structural boundaries detectable for free: markdown headers,
+   numbered lists, `## Question N` patterns, code fences. Same principle as P1's Structure component —
+   cheap signals before expensive ones. A source with *no* repeating structural marker is itself a
+   signal about content kind.
+2. **Extract — LLM, per segment not per file.** Schema returns `list[KnowledgeUnit]`, never
+   `KnowledgeUnit`. Pydantic then forces the fan-out at the type level; an ad-hoc dict return can
+   silently collapse to one record, a list-typed signature cannot.
+
+Don't hand-roll the segmenter — `markdown-it-py` (AST) or `unstructured` already chunk hierarchical
+documents. Principle 1.
+
+**Deliberately not in the MVP:** confidence thresholds, retry-on-empty-fanout, near-duplicate
+collapsing. Chunk on headers, one call per chunk, list-typed output. Fix it when a real repo shows
+the fan-out is wrong.
+
+**Open:** the no-structure fallback — one unbroken 10,000-line README with no headers breaks pass 1
+entirely. Decide when P2 design actually starts.
 
 ### Data model
 
@@ -269,13 +290,16 @@ surface.
 
 ### Assumptions carried in (correct any that are wrong)
 
-1. Existing `core/agents/` + `core/memory/` becomes the seed of **p2-ingest**; `core/ingress/` splits
-   into `packages/gh-client`; **p1-map is new**. The repo keeps its name and becomes the workspace
-   root.
-2. One web UI, scoped to P1 map editing. P2 and P3 stay CLI until proven otherwise.
+1. ~~Existing `core/agents/` + `core/memory/` becomes the seed of **p2-ingest**~~ — **overtaken by
+   events, 2026-09-12.** v1 was deleted rather than harvested for parts; it had never made a real
+   model call, so there was nothing proven to seed from. Every project is now new code. The repo
+   keeps its name and is the `uv` workspace root.
+2. One web UI, scoped to P1 map editing. **Superseded:** Datasette over the SQLite file is the
+   curation UI — see `P1_ARCHITECTURE.md` §7. Do not write a UI.
 3. Postgres for P1 (the map is edited from a UI while discovery runs in background — the concurrent
-   writer case DuckDB cannot serve). DuckDB retained for analytics, exports, and P2 data profiling.
-4. Build order P1 → P2 → P3.
+   writer case DuckDB cannot serve). **Deferred:** SQLite until something actually writes
+   concurrently with the crawler (§8 stage triggers). DuckDB retained for P2 data profiling.
+4. Build order P1 → P2 → P3. **Holds.**
 
 ### Still open from the earlier design doc
 
