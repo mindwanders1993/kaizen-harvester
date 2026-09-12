@@ -14,7 +14,7 @@ When activated, execute these steps:
 2. **Draft PR Body**: Generate a PR body in a scratch file (`/tmp/pr_body.md`) containing:
    - Target branch (`feature → dev` or `dev → main`).
    - Summary of changes.
-   - Verification Evidence (e.g., "Pytest passed with 100% coverage", "DuckDB sandbox tests passed").
+   - Verification Evidence (e.g., "uv run pytest passed", "real model call returned a live verdict"). A mock-backed pass is not evidence.
    - Karpathy Checklist ("Surgical changes only", "No speculative abstractions").
 
 3. **Pause and Prompt**:

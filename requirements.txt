@@ -1,8 +1,0 @@
-lancedb
-duckdb
-pyyaml
-aiohttp
-rich
-openai
-anthropic
-sentence-transformers

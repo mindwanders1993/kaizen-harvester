@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing & Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# P1 — local database and fetched evidence.
+# Evidence bundles are keyed by commit_sha and re-fetchable; the DB is rebuildable.
+projects/p1-map/harvest.db*
+projects/p1-map/evidence/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
