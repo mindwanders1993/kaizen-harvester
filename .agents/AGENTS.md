@@ -1,44 +1,75 @@
-# Kaizen Harvester Kaizen Governor
+# Kaizen Harvester — Kaizen Governor
 
-You are operating within the **Kaizen Harvester** (`kaizen-harvester`) repository. We use a Goal-Driven, Context & Loop Engineering methodology based on Kaizen and Karpathy principles (Simplicity First, Surgical Changes).
+You are operating within the **Kaizen Harvester** (`kaizen-harvester`) repository. We use a
+Goal-Driven, Context & Loop Engineering methodology based on Kaizen and Karpathy principles
+(Simplicity First, Surgical Changes).
+
+---
+
+## 📍 Current state — read before editing anything
+
+Three sub-projects, **only P1 is active**:
+
+| | Project | Status |
+|---|---|---|
+| **P1** | GitHub Knowledge Map — find & score repos worth harvesting | **active — Stage 0** |
+| **P2** | Ingestion → Knowledge Archive | not started |
+| **P3** | Domain Generator Agents (SQL/Python/Scala/Spark) | not started |
+
+The v1 multi-agent harvester (`core/`, `cli.py`, `recipes/`) was **deleted**, not extended. It shipped
+a database with one fabricated record because it ran on a mock LLM and was never wired to a real key.
+It is recoverable at the `v1-archive` tag. Do not resurrect its patterns.
+
+**P1 lives in `projects/p1-map/`.** Nothing exists there yet beyond the package skeleton.
 
 ---
 
 ## 🚦 Operational Workflow (Strict Protocol)
 
-You must guide the user through the following chained phases for any feature or fix. Do not skip phases unless explicitly requested by the user:
+Guide the user through these chained phases for any feature or fix. Do not skip unless asked:
 
-1. **Plan**: Activate the `plan` skill to analyze requirements, inspect existing `core/` modules, and propose a surgical strategy.
-2. **Build**: Activate the `build` skill to implement code and run test loops (`pytest`, `ruff`, dry-run checks).
-3. **Commit**: Activate the `commit` skill to review diffs and create conventional commits.
-4. **PR**: Activate the `pr` skill to generate a structured PR body and push to GitHub.
+1. **Plan** — activate the `plan` skill: analyse requirements and propose a surgical strategy.
+2. **Build** — activate the `build` skill: implement and run test loops (`uv run pytest`, `uv run ruff`).
+3. **Commit** — activate the `commit` skill: review diffs, create conventional commits.
+4. **PR** — activate the `pr` skill: generate a structured PR body and push, targeting `dev`.
 
 ---
 
 ## 🌿 Git Branching & Staging Model (`feature → dev → main`)
 
-- **`dev` (Staging / Integration)**: Primary development branch.
-  - All new feature/fix/chore branches branch from `dev` (`git checkout dev && git pull origin dev && git checkout -b feat/<description>`).
+- **`dev` (Staging / Integration)** — primary development branch.
+  - All new branches come off `dev`: `git checkout dev && git pull origin dev && git checkout -b feat/<description>`.
   - Feature PRs target **`dev`** (`--base dev`).
-- **`main` (Production Releases)**:
-  - Changes are tested and verified end-to-end on `dev` before releasing.
-- **🚫 HARD RULE: `dev → main` Merge**:
-  - The agent must **NEVER** merge `dev` into `main` via terminal / CLI (`gh pr merge` or `git merge`).
-  - The `dev → main` release merge MUST ALWAYS be performed manually by the user from the **GitHub Web UI**.
-- **Never reuse a merged branch**: Always start fresh from `dev`.
+- **`main` (Production Releases)** — changes are verified end-to-end on `dev` before release.
+- **🚫 HARD RULE: `dev → main` merge.**
+  - Never merge `dev` into `main` via terminal/CLI (`gh pr merge` or `git merge`).
+  - That release merge is performed **by the user, in the GitHub web UI, only.**
+  - This is enforced mechanically by a `PreToolUse` hook in `.claude/settings.json`.
+- **Never reuse a merged branch** — always start fresh from `dev`.
+- Conventional Commits (`feat(scope): …`).
 
 ---
 
-## 🤖 Swarm Architecture & Execution Model
+## 🏗️ P1 Architecture
 
-Kaizen Harvester relies on a modular agent swarm architecture:
-- **`core/ingress`**: Source collectors (GitHub API queries, cloner, web mesh).
-- **`core/agents`**: Specialized multi-agent swarm:
-  - **Scout Agent**: Heuristic triage and relevance filtering.
-  - **Extractor Agent**: LLM-driven structured extraction into recipe target schemas.
-  - **Curator Agent**: Sandboxed execution, SQL verification via DuckDB, and difficulty rating.
-- **`core/memory`**: Dual-tier storage (LanceDB vector deduplication + DuckDB relational catalog).
-- **`recipes/`**: Declarative YAML harvesting specifications.
+`docs/P1_ARCHITECTURE.md` is the architecture of record. The pipeline:
+
+| # | Component | Type | Job |
+|---|---|---|---|
+| 1 | **Query Planner** | deterministic | One topic → N bounded queries; beats the 1000-result cap |
+| 2 | **Discovery** | rate-limited | GitHub Search API at 25 req/min (margin under 30) |
+| 3 | **Enricher** | GraphQL | Batch metadata, 100 repos per call |
+| 4 | **Gate** (`S_meta`) | deterministic | Pure arithmetic, zero API cost. **The throughput valve** |
+| 5 | **Inspector** | 2 Core calls | Tree + README → **saved to disk keyed by `commit_sha`** |
+| 6a | **Structure** | deterministic | File-type counts → extraction signals |
+| 6b | **Verifier** | LLM + pydantic | Is this genuine practice material? kind? quality? |
+| 7 | **Store** | SQLite | repos · scores · verdicts · overrides (own table) |
+| 8 | **Curate** | Datasette | Browse, pin, blacklist, re-tag. **Do not write a UI** |
+| 9 | **Export** | JSONL | Hands kept rows to P2 as a file, never a join |
+
+**Design principles:** don't reinvent the wheel · metadata before content · an LLM only where
+judgement is required · fetch once, derive many times · human overrides are sacred · add machinery
+when you hit the wall it addresses, never before.
 
 ---
 
@@ -46,28 +77,30 @@ Kaizen Harvester relies on a modular agent swarm architecture:
 
 | Skill | When to Use |
 |:---|:---|
-| `plan` | Starting any new feature, bug fix, or core module enhancement. |
-| `build` | Implementing an approved plan (includes linting, formatting, and pytest loops). |
-| `commit` | After build is approved — stages, drafts, and commits with Conventional Commits. |
-| `pr` | Pushes branch and opens PR via GitHub CLI targeting `dev`. |
-| `test` | Running and debugging unit tests, agent mocks, DuckDB sandbox, and vector tests. |
-| `dev_env` | Setting up venv, validating environment variables (`OPENAI_API_KEY`, `GITHUB_TOKEN`), checking LanceDB/DuckDB. |
-| `ingest_recipe` | Running declarative YAML recipes to discover and buffer raw target files. |
-| `harvest_batch` | Autonomous multi-agent factory loop (Scout -> Extractor -> Curator -> LanceDB -> DuckDB) for bulk extraction. |
-| `curate_challenge` | Interactive artisanal extraction, DuckDB sandboxing, and quality curation of a single challenge. |
+| `plan` | Starting any new feature, fix, or component. |
+| `build` | Implementing an approved plan (lint, format, pytest loops). |
+| `commit` | After build is approved — stages, drafts, conventional commits. |
+| `pr` | Pushes branch and opens PR via `gh`, targeting `dev`. |
+| `test` | Running and debugging tests. |
+| `dev_env` | Setting up the `uv` workspace and validating provider credentials. |
 
 ---
 
 ## ⚠️ Token & Context Monitoring
 
 You do not have a raw token counter, but you MUST manage context bloat:
-- Periodically clear your scratchpads and avoid dumping large raw files or vector arrays into chat context.
-- At the end of the **Build** phase, summarize your actions concisely.
-- Explicitly prompt the user: *"Notice: If token usage in your UI is getting high, we can use the `/goal` command to start a fresh, focused session using our current summary."*
+- Clear scratchpads periodically; never dump large raw files into chat context.
+- At the end of the **Build** phase, summarise your actions concisely.
+- Prompt the user: *"If token usage is getting high, we can start a fresh focused session from the
+  current summary in `docs/STATE.md`."*
 
 ---
 
 ## 🔄 Interactive Chaining & Self-Learning
 
-- **Prompt Options**: At the end of every phase, provide explicit bracketed options to the user (e.g., `[1] Approve to Build, [2] Ideate, [3] Reject`). Wait for their selection before proceeding.
-- **Continuous Improvement**: During the Commit/PR phase, ask the user if this workflow could be improved. If so, you are authorized to edit these `.agents/` files to update your own knowledge base.
+- **Prompt Options**: end every phase with explicit bracketed options
+  (e.g. `[1] Approve to Build, [2] Ideate, [3] Reject`). Wait for the selection.
+- **Continuous Improvement**: during Commit/PR, ask whether this workflow could be improved. If so,
+  you are authorised to edit these `.agents/` files to update your own knowledge base.
+- **Record decisions.** When a phase settles something, write it to `docs/STATE.md`. It is the handoff
+  token between this repo and design sessions on claude.ai.

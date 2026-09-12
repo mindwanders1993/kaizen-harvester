@@ -1,17 +1,19 @@
+# uv workspace root. Not a package itself — see docs/CONCEPT_NOTES.md for the
+# target shape. `packages/` and projects/p2-ingest, p3-generate get created when
+# they have something in them, not before.
+
+[tool.uv.workspace]
+members = ["projects/*"]
+
 [tool.ruff]
 line-length = 120
-target-version = "py310"
-exclude = [
-    "venv",
-    ".git",
-    "tests/mock_data",
-]
+target-version = "py313"
+exclude = [".git", ".venv", "venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["."]
+testpaths = ["projects/p1-map/tests"]
 asyncio_mode = "auto"

@@ -8,7 +8,7 @@ description: Use this skill to initiate a new feature or fix. It analyzes the co
 When activated, execute these steps:
 
 1. **Understand Goal**: Read the user's request. Ask clarifying questions if the goal, scope, or recipe target is ambiguous.
-2. **Context Gathering**: View relevant files in `core/` (`core/ingress`, `core/agents`, `core/memory`), `recipes/`, or `cli.py` to understand the architecture.
+2. **Context Gathering**: Read `docs/P1_ARCHITECTURE.md` (architecture of record) and `docs/STATE.md` (where the build actually is). Then view relevant files under `projects/p1-map/`. Never reference `core/`, `cli.py` or `recipes/` — they were deleted with v1.
 3. **Draft Plan**: Create a markdown artifact outlining:
    - **Goal**: One sentence summary.
    - **Branch**: Proposed branch name created off `dev` (e.g., `feat/...`, `fix/...`, `chore/...`).
